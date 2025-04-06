@@ -75,11 +75,72 @@ main_section = st.sidebar.radio(
     ]
 )
 
+
+import pandas as pd
+import plotly.express as px
+
+# Helper function to load data
+def load_excel(file_path):
+    try:
+        df = pd.read_excel(file_path)
+        return df
+    except Exception as e:
+        st.error(f"Dosya yüklenirken hata oluştu: {e}")
+        return pd.DataFrame()
+
+# Charting section with session state to allow multiple charts
+def chart_creator(df, key_prefix="chart"):
+    if not df.empty:
+        st.markdown("---")
+        st.markdown("### 📊 Görsel Oluştur")
+
+        # Initialize session state list
+        if f"{key_prefix}_charts" not in st.session_state:
+            st.session_state[f"{key_prefix}_charts"] = []
+
+        with st.form(key=f"{key_prefix}_form"):
+            chart_type = st.selectbox("Grafik Türü Seçin", ["Çizgi (Line)", "Bar", "Alan (Area)", "Pasta (Pie)", "Dağılım (Scatter)"])
+            x_col = st.selectbox("X Eksen Kolonu", df.columns, key=f"{key_prefix}_x")
+            y_col = st.selectbox("Y Eksen Kolonu", df.columns, key=f"{key_prefix}_y")
+            submitted = st.form_submit_button("Grafiği Ekle")
+
+            if submitted:
+                st.session_state[f"{key_prefix}_charts"].append((chart_type, x_col, y_col))
+
+        for idx, (chart_type, x_col, y_col) in enumerate(st.session_state[f"{key_prefix}_charts"]):
+            st.markdown(f"#### Grafik {idx+1}: {chart_type}")
+            try:
+                if chart_type == "Çizgi (Line)":
+                    fig = px.line(df, x=x_col, y=y_col)
+                elif chart_type == "Bar":
+                    fig = px.bar(df, x=x_col, y=y_col)
+                elif chart_type == "Alan (Area)":
+                    fig = px.area(df, x=x_col, y=y_col)
+                elif chart_type == "Pasta (Pie)":
+                    fig = px.pie(df, names=x_col, values=y_col)
+                elif chart_type == "Dağılım (Scatter)":
+                    fig = px.scatter(df, x=x_col, y=y_col)
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception as e:
+                st.warning(f"Grafik çizilirken hata oluştu: {e}")
+
 # Sub-tab logic
 sub_tab = None
 
 if main_section == "📄 Tablolarım":
     sub_tab = st.sidebar.radio("Alt Sekmeler", ["Bilanço", "Gelir Tablosu"])
+
+    st.markdown(f"#### {sub_tab}")
+
+    if sub_tab == "Bilanço":
+        df = load_excel("file_example_XLS_10.xls")
+        st.dataframe(df)
+        chart_creator(df, key_prefix="bilanco")
+
+    elif sub_tab == "Gelir Tablosu":
+        df = load_excel("file_example_XLS_102.xls")
+        st.dataframe(df)
+        chart_creator(df, key_prefix="gelir")
 
 elif main_section == "📈 Analizlerim":
     sub_tab = st.sidebar.radio("Alt Sekmeler", ["Rasyo", "Trend", "Yüzde Analizi", "Karşılaştırmalı Analiz"])
