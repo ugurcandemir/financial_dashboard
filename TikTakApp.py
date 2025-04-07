@@ -8,6 +8,9 @@ from fpdf import FPDF
 from io import BytesIO
 import base64
 
+import plotly.express as px
+import pandas as pd
+import streamlit as st
 
 # Set Streamlit page config
 st.set_page_config(
@@ -505,6 +508,50 @@ def run_trend_analysis():
 
         st.dataframe(df_gelir_trend.style.format("{:.2f} %"))
 
+
+
+def run_ratio_analysis_dashboard():
+    
+
+    st.markdown("## 📊 Rasyo Analizi Dashboard")
+
+    # Sample data for now — replace with calculated values later
+    data = {
+        "Yıllar": [2020, 2021, 2022, 2023],
+        "Cari Oran": [1.5, 2.1, 2.3, 2.0],
+        "Borç / Özsermaye": [1.2, 1.5, 1.6, 1.4],
+        "Net Kar Marjı": [10.0, 12.5, 14.0, 15.0]
+    }
+
+    df = pd.DataFrame(data)
+
+    # --- KPI Metrics ---
+    st.markdown("### 🔑 Temel Göstergeler")
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Cari Oran", f"{df['Cari Oran'].iloc[-1]:.2f}", f"{df['Cari Oran'].iloc[-1] - df['Cari Oran'].iloc[-2]:+.2f}")
+    col2.metric("Borç / Özsermaye", f"{df['Borç / Özsermaye'].iloc[-1]:.2f}", f"{df['Borç / Özsermaye'].iloc[-1] - df['Borç / Özsermaye'].iloc[-2]:+.2f}")
+    col3.metric("Net Kar Marjı", f"{df['Net Kar Marjı'].iloc[-1]:.2f}%", f"{df['Net Kar Marjı'].iloc[-1] - df['Net Kar Marjı'].iloc[-2]:+.2f}%")
+
+    # --- Ratio Charts Side-by-Side ---
+    st.markdown("### 📈 Zaman İçindeki Değişim")
+
+    chart_col1, chart_col2 = st.columns(2)
+    with chart_col1:
+        st.plotly_chart(px.line(df, x="Yıllar", y="Cari Oran", title="Cari Oran"), use_container_width=True)
+    with chart_col2:
+        st.plotly_chart(px.line(df, x="Yıllar", y="Borç / Özsermaye", title="Borç / Özsermaye"), use_container_width=True)
+
+    # --- Data Table ---
+    st.markdown("### 📊 Tüm Rasyo Verileri")
+    st.dataframe(df.style.format({
+        "Cari Oran": "{:.2f}",
+        "Borç / Özsermaye": "{:.2f}",
+        "Net Kar Marjı": "{:.2f}%"
+    }))
+
+
+
 # Sub-tab logic
 sub_tab = None
 
@@ -545,6 +592,10 @@ elif main_section == "📈 Analizlerim":
 
     elif sub_tab == "Trend":
         run_trend_analysis()
+
+    elif sub_tab == "Rasyo":
+        run_ratio_analysis_dashboard()
+
 
 
 
