@@ -327,6 +327,58 @@ def display_fleet_data():
     st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip))
 
 
+import pandas as pd
+import joblib
+
+
+def run_car_valuation_form():
+    st.markdown("### 🚗 Araç Değerleme Formu")
+
+    # Input form fields
+    with st.form("valuation_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            marka = st.selectbox("Marka", ["Mercedes", "Hyundai", "Toyota", "Renault", "Volkswagen"])
+            model = st.text_input("Model")
+            yakit = st.selectbox("Yakıt Türü", ["Benzin", "Dizel", "Elektrik"])
+        with col2:
+            yil = st.number_input("Model Yılı", min_value=1990, max_value=2025, value=2020)
+            km = st.number_input("Güncel KM", min_value=0, value=50000)
+            motor = st.number_input("Motor Gücü (HP)", min_value=30, value=100)
+
+        segment = st.selectbox("Segment", ["Bütçe", "Aile", "Premium"])
+        kaza_durumu = st.selectbox("Kaza Durumu", ["Var", "Yok"])
+
+        submitted = st.form_submit_button("Değerleme Yap")
+
+    if submitted:
+        # Load model
+        try:
+            model = joblib.load("car_value_model.pkl")
+        except Exception as e:
+            st.error(f"Model yüklenemedi: {e}")
+            return
+
+        # Create input DataFrame
+        input_df = pd.DataFrame([{
+            "Marka": marka,
+            "Model": model,
+            "Yıl": yil,
+            "Güncel KM": km,
+            "Yakıt": yakit,
+            "Motor Gücü (HP)": motor,
+            "Segment": segment,
+            "Kaza Durumu": kaza_durumu
+        }])
+
+        # Predict
+        try:
+            prediction = model.predict(input_df)[0]
+            st.success(f"Tahmini Araç Değeri: {int(prediction):,} TL")
+        except Exception as e:
+            st.error(f"Tahmin sırasında hata oluştu: {e}")
+
+
 # Sub-tab logic
 sub_tab = None
 
@@ -366,10 +418,19 @@ elif main_section == "🚗 Filo ve Değerleme":
 
 # In your main logic:
 # elif main_section == "🚗 Filo ve Değerleme":
+    # st.markdown(f"#### {sub_tab}")
+
+    # if sub_tab == "Filo":
+    #     display_fleet_data()
+
+# elif main_section == "🚗 Filo ve Değerleme":
     st.markdown(f"#### {sub_tab}")
 
     if sub_tab == "Filo":
         display_fleet_data()
+
+    elif sub_tab == "Araç Değerleme":
+        run_car_valuation_form()
 
 # Main content area
 st.markdown(f"### {main_section}")
