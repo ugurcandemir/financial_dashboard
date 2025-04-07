@@ -433,6 +433,78 @@ def run_common_size_analysis():
         st.dataframe(df_gelir_common.style.format("{:.2f} %"))
 
 
+def run_trend_analysis():
+    st.markdown("## 📈 Trend Analizi (Yatay Yüzde Değişim)")
+
+    # ---- BİLANÇO TREND ANALİZİ ----
+    # Load balance sheet data (assumes first column is "Yıllar")
+    df_bilanco = pd.read_excel("yapay_bilanco_2020_2024.xlsx")
+    # Pivot: set "Yıllar" as index and then transpose so that rows = financial items, columns = years.
+    df_bilanco_pivot = df_bilanco.set_index("Yıllar").T
+
+    # Get the list of available years (now from the columns)
+    bilanco_years = df_bilanco_pivot.columns.tolist()
+    selected_bilanco_years = st.multiselect(
+        "Görüntülenecek Yıllar (Bilanço)",
+        bilanco_years,
+        default=bilanco_years,
+        key="trend_bilanco_years"
+    )
+
+    if selected_bilanco_years:
+        base_year_bilanco = st.selectbox(
+            "Baz Yıl (Bilanço)",
+            selected_bilanco_years,
+            key="trend_bilanco_base"
+        )
+
+        # Work on the selected columns
+        df_bilanco_selected = df_bilanco_pivot[selected_bilanco_years].copy()
+        df_bilanco_trend = df_bilanco_selected.copy()
+
+        # For each financial item (row), compute the trend relative to the base year
+        for idx in df_bilanco_trend.index:
+            base_val = df_bilanco_selected.loc[idx, base_year_bilanco]
+            if base_val != 0:
+                df_bilanco_trend.loc[idx] = (df_bilanco_selected.loc[idx] / base_val) * 100
+            else:
+                df_bilanco_trend.loc[idx] = 0
+
+        st.dataframe(df_bilanco_trend.style.format("{:.2f} %"))
+
+    st.markdown("---")
+
+    # ---- GELİR TABLOSU TREND ANALİZİ ----
+    df_gelir = pd.read_excel("yapay_gelir_tablosu_2020_2024.xlsx")
+    df_gelir_pivot = df_gelir.set_index("Yıllar").T
+
+    gelir_years = df_gelir_pivot.columns.tolist()
+    selected_gelir_years = st.multiselect(
+        "Görüntülenecek Yıllar (Gelir Tablosu)",
+        gelir_years,
+        default=gelir_years,
+        key="trend_gelir_years"
+    )
+
+    if selected_gelir_years:
+        base_year_gelir = st.selectbox(
+            "Baz Yıl (Gelir Tablosu)",
+            selected_gelir_years,
+            key="trend_gelir_base"
+        )
+
+        df_gelir_selected = df_gelir_pivot[selected_gelir_years].copy()
+        df_gelir_trend = df_gelir_selected.copy()
+
+        for idx in df_gelir_trend.index:
+            base_val = df_gelir_selected.loc[idx, base_year_gelir]
+            if base_val != 0:
+                df_gelir_trend.loc[idx] = (df_gelir_selected.loc[idx] / base_val) * 100
+            else:
+                df_gelir_trend.loc[idx] = 0
+
+        st.dataframe(df_gelir_trend.style.format("{:.2f} %"))
+
 # Sub-tab logic
 sub_tab = None
 
@@ -470,6 +542,10 @@ elif main_section == "📈 Analizlerim":
 
     if sub_tab == "Yüzde Analizi":
         run_common_size_analysis()
+
+    elif sub_tab == "Trend":
+        run_trend_analysis()
+
 
 
 elif main_section == "🚗 Filo ve Değerleme":
