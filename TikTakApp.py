@@ -379,6 +379,60 @@ def run_car_valuation_form():
             st.error(f"Tahmin sırasında hata oluştu: {e}")
 
 
+def run_common_size_analysis():
+    st.markdown("## 📊 Yüzde Yöntemi ile Analiz (Common-Size Analysis)")
+
+    # Load both datasets
+    df_bilanco = pd.read_excel("yapay_bilanco_2020_2024.xlsx", index_col=0)
+    df_gelir = pd.read_excel("yapay_gelir_tablosu_2020_2024.xlsx", index_col=0)
+
+    # ----------- BİLANÇO ANALİZİ -----------
+    st.markdown("### 📘 Bilanço")
+    bilanco_columns = df_bilanco.columns.tolist()
+
+    selected_cols_bilanco = st.multiselect(
+        "Görüntülenecek Yıllar (Bilanço)",
+        bilanco_columns,
+        default=bilanco_columns,
+        key="bilanco_years"
+    )
+
+    if selected_cols_bilanco:
+        base_column_bilanco = st.selectbox(
+            "Baz Alınacak Yıl (Bilanço)",
+            selected_cols_bilanco,
+            key="bilanco_base"
+        )
+
+        df_bilanco_view = df_bilanco[selected_cols_bilanco]
+        df_bilanco_common = df_bilanco_view.divide(df_bilanco_view[base_column_bilanco], axis=0) * 100
+        st.dataframe(df_bilanco_common.style.format("{:.2f} %"))
+
+    st.markdown("---")
+
+    # ----------- GELİR TABLOSU ANALİZİ -----------
+    st.markdown("### 📙 Gelir Tablosu")
+    gelir_columns = df_gelir.columns.tolist()
+
+    selected_cols_gelir = st.multiselect(
+        "Görüntülenecek Yıllar (Gelir Tablosu)",
+        gelir_columns,
+        default=gelir_columns,
+        key="gelir_years"
+    )
+
+    if selected_cols_gelir:
+        base_column_gelir = st.selectbox(
+            "Baz Alınacak Yıl (Gelir Tablosu)",
+            selected_cols_gelir,
+            key="gelir_base"
+        )
+
+        df_gelir_view = df_gelir[selected_cols_gelir]
+        df_gelir_common = df_gelir_view.divide(df_gelir_view[base_column_gelir], axis=0) * 100
+        st.dataframe(df_gelir_common.style.format("{:.2f} %"))
+
+
 # Sub-tab logic
 sub_tab = None
 
@@ -411,7 +465,12 @@ if main_section == "📄 Tablolarım":
     
 
 elif main_section == "📈 Analizlerim":
-    sub_tab = st.sidebar.radio("Alt Sekmeler", ["Rasyo", "Trend", "Yüzde Analizi", "Karşılaştırmalı Analiz"])
+    # sub_tab = st.sidebar.radio("Alt Sekmeler", ["Rasyo", "Trend", "Yüzde Analizi", "Karşılaştırmalı Analiz"])
+    sub_tab = st.sidebar.radio("Alt Sekmeler", [ "Yüzde Analizi" ,  "Trend", "Rasyo"])
+
+    if sub_tab == "Yüzde Analizi":
+        run_common_size_analysis()
+
 
 elif main_section == "🚗 Filo ve Değerleme":
     sub_tab = st.sidebar.radio("Alt Sekmeler", ["Filo", "Araç Değerleme"])
