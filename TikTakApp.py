@@ -254,6 +254,79 @@ from markdown2 import markdown
 from bs4 import BeautifulSoup
 import tempfile
 
+
+import pandas as pd
+
+def display_fleet_data():
+    st.markdown("### 🚘 Otomobil Filosu Verisi")
+
+    # Load the data
+    df = pd.read_excel("otomobil_filosu_verisi.xlsx")
+
+    # Column selection (no year filtering)
+    all_columns = df.columns.tolist()
+    selected_columns = st.multiselect("Görüntülenecek Değişkenleri Seçin", all_columns, default=all_columns[:5], key="filo_cols")
+
+    # Display the selected columns
+    st.dataframe(df[selected_columns])
+
+
+
+import streamlit as st
+import pandas as pd
+import pydeck as pdk
+
+def display_fleet_data():
+    st.markdown("### 🚘 Otomobil Filosu Verisi")
+
+    # Load the fleet dataset
+    df = pd.read_excel("otomobil_filosu_verisi.xlsx")
+
+    # Column selection
+    all_columns = df.columns.tolist()
+    selected_columns = st.multiselect("Görüntülenecek Değişkenleri Seçin", all_columns, default=all_columns[:5], key="filo_cols")
+
+    # Display selected columns
+    st.dataframe(df[selected_columns])
+
+    # Map visualization section
+    st.markdown("### 📍 Araç Canlı Takip")
+
+    # Parse coordinates from "Anlık Konum" column
+    df[["lat", "lon"]] = df["Anlık Konum"].str.split(",", expand=True).astype(float)
+
+    # Prepare the map layer to visualize vehicle locations as scatter points
+    # Each point represents a vehicle, with a red color and a radius of 80
+    # The points are interactive (pickable) to show additional information on hover
+    layer = pdk.Layer(
+        "ScatterplotLayer",  # Type of layer to render scatter points
+        data=df,  # Data source containing vehicle locations
+        get_position='[lon, lat]',  # Extract longitude and latitude for positioning
+        get_radius=380,  # Radius of each scatter point
+        get_fill_color=[255, 0, 0, 160],  # Red color with some transparency
+        pickable=True  # Enable interactivity for tooltips
+    )
+
+    # Define the tooltip to display vehicle license plate ("Plaka") on hover
+    tooltip = {
+        # "html": "<b>Plaka:</b> {Plaka}",  # HTML content for the tooltip
+        "html": "{Plaka}",  # HTML content for the tooltip
+        "style": {"backgroundColor": "white", "color": "black"}  # Tooltip styling
+    }
+
+    # Set the initial view state of the map
+    # Center the map around the average latitude and longitude of the vehicles
+    # Set the zoom level to 9 and pitch to 0 for a top-down view
+    view_state = pdk.ViewState(
+        latitude=df["lat"].mean(),  # Center latitude
+        longitude=df["lon"].mean(),  # Center longitude
+        zoom=9,  # Zoom level
+        pitch=0  # Camera angle (0 for top-down view)
+    )
+
+    st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip))
+
+
 # Sub-tab logic
 sub_tab = None
 
@@ -290,6 +363,13 @@ elif main_section == "📈 Analizlerim":
 
 elif main_section == "🚗 Filo ve Değerleme":
     sub_tab = st.sidebar.radio("Alt Sekmeler", ["Filo", "Araç Değerleme"])
+
+# In your main logic:
+# elif main_section == "🚗 Filo ve Değerleme":
+    st.markdown(f"#### {sub_tab}")
+
+    if sub_tab == "Filo":
+        display_fleet_data()
 
 # Main content area
 st.markdown(f"### {main_section}")
