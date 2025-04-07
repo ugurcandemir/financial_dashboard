@@ -12,6 +12,30 @@ import plotly.express as px
 import pandas as pd
 import streamlit as st
 
+import pandas as pd
+import plotly.express as px
+
+
+import unicodedata
+
+
+import os
+from markdown2 import markdown
+from bs4 import BeautifulSoup
+import tempfile
+
+
+import pandas as pd
+
+
+import streamlit as st
+import pandas as pd
+import pydeck as pdk
+
+import pandas as pd
+import joblib
+
+
 # Set Streamlit page config
 st.set_page_config(
     page_title="TikTak Finansal Analiz Platformu",
@@ -87,8 +111,6 @@ main_section = st.sidebar.radio(
 )
 
 
-import pandas as pd
-import plotly.express as px
 
 # Helper function to load data
 def load_excel(file_path):
@@ -100,7 +122,6 @@ def load_excel(file_path):
         return pd.DataFrame()
 
 
-import unicodedata
 
 def remove_accents(text):
     return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
@@ -252,13 +273,6 @@ def chart_creator_with_export(df, key_prefix="chart"):
         except Exception as e:
             st.warning(f"Grafik çizilirken hata oluştu: {e}")
 
-import os
-from markdown2 import markdown
-from bs4 import BeautifulSoup
-import tempfile
-
-
-import pandas as pd
 
 def display_fleet_data():
     st.markdown("### 🚘 Otomobil Filosu Verisi")
@@ -275,9 +289,6 @@ def display_fleet_data():
 
 
 
-import streamlit as st
-import pandas as pd
-import pydeck as pdk
 
 def display_fleet_data():
     st.markdown("### 🚘 Otomobil Filosu Verisi")
@@ -329,9 +340,6 @@ def display_fleet_data():
 
     st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip))
 
-
-import pandas as pd
-import joblib
 
 
 def run_car_valuation_form():
